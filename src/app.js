@@ -3,12 +3,9 @@ const connectDB = require("./config/database");
 const User = require("./models/user");
 const app = express();
 
+app.use(express.json());
 app.post("/signup",async(req,res)=>{
-    const user = new User({
-        firstName:"Lakshya",
-        lastName:"Mudgal",
-        emailid:"lakshya123@gmail.com"
-    })
+   const user = new User(req.body);
     try{
         await user.save();
     res.send("User created succesfully");
@@ -17,7 +14,7 @@ app.post("/signup",async(req,res)=>{
         res.status(400).send("The error is "+err.message);
     }
     
-})
+});
 
  
 
