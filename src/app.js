@@ -1,20 +1,85 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const validateuserData = require("./utils/validation");
+const bcrypt = require("bcrypt");
 const app = express();
+const cookieParser = require('cookie-parser');
+const jwt = require("jsonwebtoken");
+const {userAuth}  = require("./middlewares/auth");
+
+
+// const jwt = require("jsonwebtoken");
+// const cookie = require("cookie-parsar");
 
 app.use(express.json());  //middleware to convert JSON object to JS object
 // Insert data API
-app.post("/signup",async(req,res)=>{
-    const user = new User(req.body);
-  try{
+app.use(cookieParser()); //middleware used to access cookies like in cookies generally authenticated token information is stored which needed further
+
+app.post("/signup", async (req, res) => {
+  try {
+    validateuserData(req.body); // Pass req.body instead of req
+
+    const { firstName, lastName, emailid, password } = req.body;
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({
+      firstName,
+      lastName,
+      emailid,
+      password: hashPassword,
+    });
+
     await user.save();
-    res.send("User created successfully");
+    res.send("User added successfully");
+  } catch (err) {
+    res.status(400).send("Error message: " + err.message);
+  }
+});
+
+//login api
+app.post("/login",async(req,res)=>{
+  try{
+
+    const{emailid,password} = req.body;
+    const user = await User.findOne({emailid});
+    if(!user){
+      throw new Error("Invalid crediantials");
+    }
+      const isPassword = await bcrypt.compare(password,user.password);
+     if(!isPassword){
+        throw new Error("Paasword does not match");
+    } 
+    //Token is generated
+    const jwtToken = await jwt.sign({_id:user._id},"@Nilesh774",{expiresIn:"7d"});
+    res.cookie("token",jwtToken);
+    res.send("Login successfull");
+
+
   }
   catch(err){
-    res.status(400).send("Error message is"+err.message);
+    res.status(400).send("Error message is:"+err.message);
   }
 })
+
+app.post("/hello",userAuth,async(req,res)=>{
+  try{
+    res.send("hello");
+  }
+  catch(err){
+    res.status(400).send("Error message is "+err.message);
+  }
+});
+//get profile api
+
+app.get("/profile",userAuth,async(req,res)=>{
+  try{
+        res.send(req.user);
+  }
+  catch(err){
+    res.status(400).send("Error message is:"+err.message);
+  }
+});
 
 //get data API
 app.get("/user",async(req,res)=>{
@@ -31,6 +96,8 @@ app.get("/user",async(req,res)=>{
       res.status(400).send("Error message is "+err.message);
     }
 })
+
+
 
 //delete data API
 app.delete("/user",async(req,res)=>{
