@@ -8,7 +8,6 @@ const userAuth = async (req, res, next) => {
             throw new Error("Token is not provided");
         }
         const decode = jwt.verify(token, "@Nilesh774");
-
         const user = await User.findById(decode._id).lean(); //  Convert to plain JSON object
 
         if (!user) {
