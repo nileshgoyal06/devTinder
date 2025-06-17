@@ -5,9 +5,9 @@ const userAuth = async (req, res, next) => {
     try {
         const token = req.cookies.token;
         if (!token) {
-            throw new Error("Token is not provided");
+            return res.status(401).send("Please Login!");
         }
-        const decode = jwt.verify(token, "@Nilesh774");
+        const decode = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decode._id).lean(); //  Convert to plain JSON object
 
         if (!user) {

@@ -22,7 +22,7 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
     }
 
     // Users cannot send requests to themselves
-    if (fromUserId.toString() === toUserId.toString()) {
+    if (fromUserId.toString() === toUserId.toString()) {    
       throw new Error("Can't send request to yourself");
     }
 

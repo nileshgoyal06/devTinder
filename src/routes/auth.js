@@ -1,13 +1,14 @@
 const express = require("express");
 const authRouter = express.Router();
 const User = require("../models/user");
-const validateuserData = require("../utils/validation");
+const {validateSignUpData} = require("../utils/validation");
 const bcrypt = require("bcrypt");
 const {userAuth}  = require("../middlewares/auth");
+
 //signupup API
 authRouter.post("/signup", async (req, res) => {
   try {
-    validateuserData(req.body); // Pass req.body instead of req
+    validateSignUpData(req.body); // Pass req.body instead of req
 
     const { firstName, lastName, emailid, password } = req.body;
     const hashPassword = await bcrypt.hash(password, 10);
@@ -19,9 +20,12 @@ authRouter.post("/signup", async (req, res) => {
       password: hashPassword,
     });
 
-    await user.save();
-    res.send("User added successfully");
-  } catch (err) {
+    const savedUser =await user.save();
+    const jwtToken = await savedUser.getJWT();
+     res.cookie("token",jwtToken);
+    
+    res.json({message:"User Added successfully!",data:savedUser});
+  } catch (err){
     res.status(400).send("Error message: " + err.message);
   }
 });
@@ -42,8 +46,7 @@ authRouter.post("/login",async(req,res)=>{
     //Token is generated
     const jwtToken = await user.getJWT();
     res.cookie("token",jwtToken);
-    res.send("Login successfull");
-
+    res.send(user);
 
   }
   catch(err){
