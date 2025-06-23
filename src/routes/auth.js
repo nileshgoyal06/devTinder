@@ -8,7 +8,7 @@ const {userAuth}  = require("../middlewares/auth");
 //signupup API
 authRouter.post("/signup", async (req, res) => {
   try {
-    validateSignUpData(req.body); // Pass req.body instead of req
+    validateSignUpData(req.body); 
 
     const { firstName, lastName, emailid, password } = req.body;
     const hashPassword = await bcrypt.hash(password, 10);
